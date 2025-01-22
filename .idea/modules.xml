@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SegundaGUI.iml" filepath="$PROJECT_DIR$/SegundaGUI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/file-transfer-GUI.iml" filepath="$PROJECT_DIR$/file-transfer-GUI.iml" />
     </modules>
   </component>
 </project>

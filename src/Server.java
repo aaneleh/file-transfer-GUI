@@ -1,0 +1,180 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
+
+
+public class Server {
+
+    //VARIÁVEIS SOCKET
+    ServerSocket socketRecepcao = null;
+    int PORT = 6789;
+
+    File pastaArquivos = new File("DefaultFolder");
+    File[] listaArquivos = pastaArquivos.listFiles();
+
+    //VARIÁVEIS GUI
+    JFrame frame;
+    JPanel serverPanel;
+    JLabel statusConexao;
+    JLabel enderecoDiretorio;
+    JButton botaoConexao;
+    JButton botaoSelecionarDiretorio;
+    JPanel bodyListagem;
+
+
+    //INICIALIZA GUI
+    public void iniciaGUI(){
+        System.out.println("Inicia GUI");
+        frame = new JFrame();
+
+        serverPanel = new JPanel();
+        serverPanel.setPreferredSize(new Dimension(600,500));
+        serverPanel.setLayout(null);
+
+        statusConexao = new JLabel();
+        //TODO mudar número da porta pra variavel q será criada
+        statusConexao.setText("Servidor desligado");
+        statusConexao.setBounds(195, 50, 300,50);
+
+        botaoConexao = new JButton();
+        botaoConexao.setText("Iniciar conexao");
+        botaoConexao.setBounds(195, 100, 200,30);
+        botaoConexao.setFocusable(false);
+        botaoConexao.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //Se ainda não conectado, inicia conexão e muda o texto e o botao pra informar
+                Server server = new Server();//todo por favor fazer de uma forma decente
+                server.connect();
+            }
+        });
+
+        JPanel headerListagem = new JPanel(new FlowLayout());
+        headerListagem.setBounds(50, 170, 500, 60);
+        headerListagem.setBackground(new Color(224,224,224));
+        headerListagem.setBorder(new LineBorder(new Color(192,192,192)));
+        enderecoDiretorio = new JLabel();
+        enderecoDiretorio.setText(pastaArquivos.getAbsolutePath());
+
+        botaoSelecionarDiretorio = new JButton();
+        botaoSelecionarDiretorio.setText("Selecionar diretório");
+        botaoSelecionarDiretorio.setFocusable(false);
+        botaoSelecionarDiretorio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser exploradorArquivos = new JFileChooser();
+                int res = exploradorArquivos.showOpenDialog(null);
+
+                if(res == JFileChooser.APPROVE_OPTION) {
+
+                    while(bodyListagem.getComponentCount() > 0)
+                        bodyListagem.remove(0);
+
+                    File arquivoSelecionado = exploradorArquivos.getSelectedFile().getAbsoluteFile();
+                    File pastaSelecionado = arquivoSelecionado.getParentFile();
+                    enderecoDiretorio.setText(pastaSelecionado.getAbsolutePath());
+
+                    File[] listaArquivos = pastaSelecionado.listFiles();
+                    for (File listaArquivo : listaArquivos)
+                        if (!listaArquivo.isDirectory() && !listaArquivo.isHidden())
+                            bodyListagem.add(new JLabel(listaArquivo.getName()));
+
+                    bodyListagem.revalidate();
+                    bodyListagem.repaint();
+                }
+            }
+        });
+
+        headerListagem.setLayout(new FlowLayout());
+        headerListagem.add(enderecoDiretorio);
+        headerListagem.add(botaoSelecionarDiretorio);
+
+        bodyListagem = new JPanel();
+        bodyListagem.setLayout(new BoxLayout(bodyListagem, BoxLayout.Y_AXIS));
+        bodyListagem.setBounds(50,229,500,200);
+        bodyListagem.setBorder(new LineBorder(new Color(192,192,192)));
+        for (File listaArquivo : listaArquivos) {
+            bodyListagem.add(new JLabel(listaArquivo.getName()));
+        }
+
+        serverPanel.add(statusConexao);
+        serverPanel.add(botaoConexao);
+        serverPanel.add(headerListagem);
+        serverPanel.add(bodyListagem);
+        frame.add(serverPanel);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600,500);
+        frame.setVisible(true);
+    }
+
+    public void connect() {
+        try {
+
+            System.out.println("Server Aguardando");
+            socketRecepcao = new ServerSocket(PORT);
+            Socket socketConexao = socketRecepcao.accept();
+            System.out.println("Server conectou");
+
+            ObjectInputStream doCliente = new ObjectInputStream(socketConexao.getInputStream());
+            ObjectOutputStream paraCliente = new ObjectOutputStream(socketConexao.getOutputStream());
+
+            paraCliente.writeObject(listaArquivos); //manda o file[]
+            int[] indiceArquivos = (int[])doCliente.readObject(); //le um int indiceArquivos[]
+
+            FileInputStream fileInputStream;
+            DataOutputStream paraClienteData;
+            int bytes;
+            byte[] buffer;
+            for(int i = 0; i < indiceArquivos.length; i++){
+                bytes = 0;
+                fileInputStream = new FileInputStream(listaArquivos[indiceArquivos[0]]);
+                paraClienteData = new DataOutputStream(socketConexao.getOutputStream());
+                paraClienteData.writeLong(listaArquivos[0].length());
+                buffer = new byte[4 * 1024];
+                while ((bytes = fileInputStream.read(buffer))!= -1) {
+                    paraClienteData.write(buffer, 0, bytes);
+                    paraClienteData.flush();
+                }
+                fileInputStream.close();
+            }
+
+            if(indiceArquivos.length > 0){
+                JFrame frameEnviados = new JFrame();
+                JLabel titulo = new JLabel("Arquivos enviados:");
+                titulo.setBounds(120, 50, 150, 40);
+
+                JPanel panelEnviados = new JPanel();
+                panelEnviados.setLayout(new BoxLayout(panelEnviados, BoxLayout.Y_AXIS));
+                panelEnviados.setBounds(50, 100, 270, 200);
+                panelEnviados.setBorder(new LineBorder(new Color(192, 192,192)));
+
+                for(int i = 0; i < indiceArquivos.length; i++){
+                    panelEnviados.add((new JLabel(listaArquivos[i].getName())));
+                }
+
+                frameEnviados.setLayout(null);
+                frameEnviados.add(titulo);
+                frameEnviados.add(panelEnviados);
+                frameEnviados.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frameEnviados.setSize(new Dimension(400,400));
+                frameEnviados.setVisible(true);
+
+            }
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args){
+
+        new Server().iniciaGUI();
+
+    }
+}
