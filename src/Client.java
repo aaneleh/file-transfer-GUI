@@ -10,7 +10,7 @@ import javax.swing.border.LineBorder;
 public class Client {
 
     BufferedReader doUsuario = new BufferedReader(new InputStreamReader(System.in));
-    int fileIndex;
+    int[] fileIndex;
     File[] fileList;
     int bytes;
     long size;
@@ -22,15 +22,13 @@ public class Client {
     JFrame frame;
     JPanel clientPanel;
     JLabel status = new JLabel("Desconectado");
-    JLabel ip; //todo se implementação for tranquila, usar um tempo pra tornar um input
+    JLabel ip; //TODO: Tornar um input, por default é o localhost
     JPanel listagemArquivos;
     JButton botaoInicarConexao;
-    JButton botaoConfirmar;
-    JButton botaoCancelar;
+    JButton botaoResetar;
 
-    public void connect(){
+    public File[] connect(int[] lista){
         try {
-
             Socket socketCliente = new Socket(IP, PORT);
             System.out.println("Conexão efetuada com sucesso");
 
@@ -39,9 +37,12 @@ public class Client {
             DataInputStream doServidorData = new DataInputStream(socketCliente.getInputStream());
 
             fileList = (File[])doServidor.readObject();
-            //TODO retorna essa fileList pra ser atualizado na visualização
 
-            int[] lista = {0,1}; //TODO lista será dinâmica baseada nas checkboxes e não precisa estar em ordem
+            //TODO Cria um array lista pra uso "interno" daí aqui converter pra um int[]
+            //daí garante que se estiver nulo vai ser o int[0] e também que todas as posições vão estar preenchidas
+
+            if(lista == null) lista = new int[0];
+
             paraServidor.writeObject(lista);
 
             FileOutputStream fileOutputStream;
@@ -58,12 +59,12 @@ public class Client {
                 fileOutputStream.close();
             }
 
-            //TODO: se for pedido algum arquivo faz a mesma coisa que do lado do server: cria um JFrame listando os arquivos recebidos
-
-
         } catch(Exception e){
             e.printStackTrace();
+            return null;
         }
+
+        return fileList;
     }
 
     public void iniciaGUI() {
@@ -83,7 +84,17 @@ public class Client {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Client cliente = new Client();
-                cliente.connect();
+                //TODO lista será dinâmica baseada nas checkboxes e não precisa estar em ordem
+                fileIndex = new int[1];
+                fileIndex[0] = 0;
+                //fileIndex[1] = 1;
+                File[] fileList = cliente.connect(fileIndex);
+                System.out.println("primeiro nome do retorno da funcao:" + fileList[0].getName());
+
+                for(int i = 0; i < fileList.length; i ++){
+                    listagemArquivos.add(new JLabel(fileList[i].getName()));
+                }
+                listagemArquivos.revalidate();
             }
         });
         selecaoConexao.setBounds(170, 100, 200,40);
@@ -92,22 +103,25 @@ public class Client {
         selecaoConexao.add(botaoInicarConexao);
 
         listagemArquivos = new JPanel();
+        listagemArquivos.setLayout(new BoxLayout(listagemArquivos, BoxLayout.Y_AXIS));
         listagemArquivos.setBounds(80,  155, 400, 200);
         listagemArquivos.setBorder(new LineBorder(new Color(192, 192, 192)));
 
         //TODO: trocar esse botão pra ele "limpar" a exibição e os arquivos selecionados
-        botaoCancelar = new JButton("Cancelar e Desconectar");
-        botaoCancelar.setFocusable(false);
-        //botaoCancelar.addActionListener(this);
-        //TODO: remover esse "confirmar"
-        botaoConfirmar = new JButton("Confirmar");
-        botaoConfirmar.setFocusable(false);
-        //botaoConfirmar.addActionListener(this);
+        botaoResetar = new JButton("Resetar");
+        botaoResetar.setFocusable(false);
+        botaoResetar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listagemArquivos.removeAll();
+                listagemArquivos.revalidate();
+                listagemArquivos.repaint();
+                fileIndex = null;
+            }
+        });
         JPanel selecaoConfirmacao = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 0));
         selecaoConfirmacao.setBounds(80, 380, 400, 40);
-        selecaoConfirmacao.add(botaoCancelar);
-        selecaoConfirmacao.add(botaoConfirmar);
-
+        selecaoConfirmacao.add(botaoResetar);
 
         clientPanel.add(status);
         clientPanel.add(selecaoConexao);

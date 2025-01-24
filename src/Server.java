@@ -25,7 +25,10 @@ public class Server {
     JButton botaoConexao;
     JButton botaoSelecionarDiretorio;
     JPanel bodyListagem;
+    JLabel arquivoLabel;
 
+    ImageIcon iconePasta = new ImageIcon("src/folderIcon.png");
+    ImageIcon iconeEnviado = new ImageIcon("src/sentIcon.png");
 
     //INICIALIZA GUI
     public void iniciaGUI(){
@@ -48,9 +51,24 @@ public class Server {
         botaoConexao.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //Se ainda não conectado, inicia conexão e muda o texto e o botao pra informar
-                Server server = new Server();//todo por favor fazer de uma forma decente
-                server.connect();
+                Server server = new Server();
+                int[] indicesEnviados = server.connect();
+
+                System.out.println("Numero de arquivos enviados: " + indicesEnviados.length);
+                bodyListagem.removeAll();
+
+                for (int i = 0 ; i < listaArquivos.length; i++) {
+                    arquivoLabel = new JLabel(listaArquivos[i].getName());
+                    for (int indicesEnviado : indicesEnviados)
+                        if (i == indicesEnviado) {
+                            arquivoLabel.setIcon(iconeEnviado);
+                            arquivoLabel.setHorizontalTextPosition(JLabel.LEFT);
+                            break;
+                        }
+                    bodyListagem.add(arquivoLabel);
+                    bodyListagem.revalidate();
+                    bodyListagem.repaint();
+                }
             }
         });
 
@@ -63,6 +81,7 @@ public class Server {
 
         botaoSelecionarDiretorio = new JButton();
         botaoSelecionarDiretorio.setText("Selecionar diretório");
+        botaoSelecionarDiretorio.setIcon(iconePasta);
         botaoSelecionarDiretorio.setFocusable(false);
         botaoSelecionarDiretorio.addActionListener(new ActionListener() {
             @Override
@@ -78,6 +97,7 @@ public class Server {
                     File arquivoSelecionado = exploradorArquivos.getSelectedFile().getAbsoluteFile();
                     File pastaSelecionado = arquivoSelecionado.getParentFile();
                     enderecoDiretorio.setText(pastaSelecionado.getAbsolutePath());
+                    listaArquivos = pastaSelecionado.listFiles();
 
                     File[] listaArquivos = pastaSelecionado.listFiles();
                     for (File listaArquivo : listaArquivos)
@@ -112,7 +132,7 @@ public class Server {
         frame.setVisible(true);
     }
 
-    public void connect() {
+    public int[] connect() {
         try {
 
             System.out.println("Server Aguardando");
@@ -123,6 +143,7 @@ public class Server {
             ObjectInputStream doCliente = new ObjectInputStream(socketConexao.getInputStream());
             ObjectOutputStream paraCliente = new ObjectOutputStream(socketConexao.getOutputStream());
 
+            System.out.println(listaArquivos[0]); //TODO não está sendo mandada a lista atualizada (depois de selecionar uma nova pasta)
             paraCliente.writeObject(listaArquivos); //manda o file[]
             int[] indiceArquivos = (int[])doCliente.readObject(); //le um int indiceArquivos[]
 
@@ -143,38 +164,16 @@ public class Server {
                 fileInputStream.close();
             }
 
-            if(indiceArquivos.length > 0){
-                JFrame frameEnviados = new JFrame();
-                JLabel titulo = new JLabel("Arquivos enviados:");
-                titulo.setBounds(120, 50, 150, 40);
-
-                JPanel panelEnviados = new JPanel();
-                panelEnviados.setLayout(new BoxLayout(panelEnviados, BoxLayout.Y_AXIS));
-                panelEnviados.setBounds(50, 100, 270, 200);
-                panelEnviados.setBorder(new LineBorder(new Color(192, 192,192)));
-
-                for(int i = 0; i < indiceArquivos.length; i++){
-                    panelEnviados.add((new JLabel(listaArquivos[i].getName())));
-                }
-
-                frameEnviados.setLayout(null);
-                frameEnviados.add(titulo);
-                frameEnviados.add(panelEnviados);
-                frameEnviados.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frameEnviados.setSize(new Dimension(400,400));
-                frameEnviados.setVisible(true);
-
-            }
+            return indiceArquivos;
 
         }
         catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 
     public static void main(String[] args){
-
         new Server().iniciaGUI();
-
     }
 }
