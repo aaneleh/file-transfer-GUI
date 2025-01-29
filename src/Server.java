@@ -10,14 +10,56 @@ import javax.swing.border.LineBorder;
 
 public class Server {
 
-    //VARIÁVEIS SOCKET
-    ServerSocket socketRecepcao = null;
-    int PORT = 6789;
+    public static int[] connect(File[] novaListaArquivos) {
+        ServerSocket socketRecepcao = null;
+        int PORT = 6789;
+        File pastaArquivos = new File("DefaultFolder");
+        File[] listaArquivos = pastaArquivos.listFiles();
+
+        try {
+
+            System.out.println("Server Aguardando");
+            socketRecepcao = new ServerSocket(PORT);
+            Socket socketConexao = socketRecepcao.accept();
+            System.out.println("Server conectou");
+
+            ObjectInputStream doCliente = new ObjectInputStream(socketConexao.getInputStream());
+            ObjectOutputStream paraCliente = new ObjectOutputStream(socketConexao.getOutputStream());
+
+            paraCliente.writeObject(novaListaArquivos); //manda o file[]
+            int[] indiceArquivos = (int[])doCliente.readObject(); //le um int indiceArquivos[]
+
+            FileInputStream fileInputStream;
+            DataOutputStream paraClienteData;
+            int bytes;
+            byte[] buffer;
+            for(int i = 0; i < indiceArquivos.length; i++){
+                bytes = 0;
+                fileInputStream = new FileInputStream(listaArquivos[indiceArquivos[0]]);
+                paraClienteData = new DataOutputStream(socketConexao.getOutputStream());
+                paraClienteData.writeLong(listaArquivos[0].length());
+                buffer = new byte[4 * 1024];
+                while ((bytes = fileInputStream.read(buffer))!= -1) {
+                    paraClienteData.write(buffer, 0, bytes);
+                    paraClienteData.flush();
+                }
+                fileInputStream.close();
+            }
+
+            socketConexao.close();
+            socketRecepcao.close();
+
+            return indiceArquivos;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     File pastaArquivos = new File("DefaultFolder");
     File[] listaArquivos = pastaArquivos.listFiles();
 
-    //VARIÁVEIS GUI
     JFrame frame;
     JPanel serverPanel;
     JLabel statusConexao;
@@ -26,7 +68,6 @@ public class Server {
     JButton botaoSelecionarDiretorio;
     JPanel bodyListagem;
     JLabel arquivoLabel;
-
     ImageIcon iconePasta = new ImageIcon("src/folderIcon.png");
     ImageIcon iconeEnviado = new ImageIcon("src/sentIcon.png");
 
@@ -51,10 +92,8 @@ public class Server {
         botaoConexao.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Server server = new Server();
-                int[] indicesEnviados = server.connect();
 
-                System.out.println("Numero de arquivos enviados: " + indicesEnviados.length);
+                int[] indicesEnviados = connect(listaArquivos);
                 bodyListagem.removeAll();
 
                 for (int i = 0 ; i < listaArquivos.length; i++) {
@@ -69,6 +108,7 @@ public class Server {
                     bodyListagem.revalidate();
                     bodyListagem.repaint();
                 }
+
             }
         });
 
@@ -91,23 +131,35 @@ public class Server {
 
                 if(res == JFileChooser.APPROVE_OPTION) {
 
-                    while(bodyListagem.getComponentCount() > 0)
-                        bodyListagem.remove(0);
+                    bodyListagem.removeAll();
 
                     File arquivoSelecionado = exploradorArquivos.getSelectedFile().getAbsoluteFile();
                     File pastaSelecionado = arquivoSelecionado.getParentFile();
                     enderecoDiretorio.setText(pastaSelecionado.getAbsolutePath());
-                    listaArquivos = pastaSelecionado.listFiles();
+                    File[] novaListaArquivos = pastaSelecionado.listFiles();
 
-                    File[] listaArquivos = pastaSelecionado.listFiles();
-                    for (File listaArquivo : listaArquivos)
-                        if (!listaArquivo.isDirectory() && !listaArquivo.isHidden())
-                            bodyListagem.add(new JLabel(listaArquivo.getName()));
+                    int i = 0;
+                    pastaArquivos = pastaSelecionado;
+
+                    for (File novoArquivo : novaListaArquivos)
+                        if (!novoArquivo.isDirectory() && !novoArquivo.isHidden()) {
+                            i++;
+                            bodyListagem.add(new JLabel(novoArquivo.getName()));
+                        }
+
+                    listaArquivos = new File[i];
+                    i=0;
+                    for (File novoArquivo : novaListaArquivos)
+                        if (!novoArquivo.isDirectory() && !novoArquivo.isHidden()) {
+                            listaArquivos[i] = novoArquivo;
+                            i++;
+                        }
 
                     bodyListagem.revalidate();
                     bodyListagem.repaint();
                 }
             }
+
         });
 
         headerListagem.setLayout(new FlowLayout());
@@ -118,9 +170,8 @@ public class Server {
         bodyListagem.setLayout(new BoxLayout(bodyListagem, BoxLayout.Y_AXIS));
         bodyListagem.setBounds(50,229,500,200);
         bodyListagem.setBorder(new LineBorder(new Color(192,192,192)));
-        for (File listaArquivo : listaArquivos) {
+        for (File listaArquivo : listaArquivos)
             bodyListagem.add(new JLabel(listaArquivo.getName()));
-        }
 
         serverPanel.add(statusConexao);
         serverPanel.add(botaoConexao);
@@ -132,48 +183,7 @@ public class Server {
         frame.setVisible(true);
     }
 
-    public int[] connect() {
-        try {
 
-            System.out.println("Server Aguardando");
-            socketRecepcao = new ServerSocket(PORT);
-            Socket socketConexao = socketRecepcao.accept();
-            System.out.println("Server conectou");
+    public static void main(String[] args){ new Server().iniciaGUI(); }
 
-            ObjectInputStream doCliente = new ObjectInputStream(socketConexao.getInputStream());
-            ObjectOutputStream paraCliente = new ObjectOutputStream(socketConexao.getOutputStream());
-
-            System.out.println(listaArquivos[0]); //TODO não está sendo mandada a lista atualizada (depois de selecionar uma nova pasta)
-            paraCliente.writeObject(listaArquivos); //manda o file[]
-            int[] indiceArquivos = (int[])doCliente.readObject(); //le um int indiceArquivos[]
-
-            FileInputStream fileInputStream;
-            DataOutputStream paraClienteData;
-            int bytes;
-            byte[] buffer;
-            for(int i = 0; i < indiceArquivos.length; i++){
-                bytes = 0;
-                fileInputStream = new FileInputStream(listaArquivos[indiceArquivos[0]]);
-                paraClienteData = new DataOutputStream(socketConexao.getOutputStream());
-                paraClienteData.writeLong(listaArquivos[0].length());
-                buffer = new byte[4 * 1024];
-                while ((bytes = fileInputStream.read(buffer))!= -1) {
-                    paraClienteData.write(buffer, 0, bytes);
-                    paraClienteData.flush();
-                }
-                fileInputStream.close();
-            }
-
-            return indiceArquivos;
-
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static void main(String[] args){
-        new Server().iniciaGUI();
-    }
 }

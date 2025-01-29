@@ -3,31 +3,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 public class Client {
 
-    BufferedReader doUsuario = new BufferedReader(new InputStreamReader(System.in));
-    int[] fileIndex;
-    File[] fileList;
-    int bytes;
-    long size;
-    byte[] buffer;
+    public static File[] connect(int[] lista) {
+        String IP = "192.168.1.20";
+        int PORT = 6789;
+        int bytes;
+        long size;
+        byte[] buffer;
+        File[] fileList;
 
-    String IP = "192.168.1.20";
-    int PORT = 6789;
-
-    JFrame frame;
-    JPanel clientPanel;
-    JLabel status = new JLabel("Desconectado");
-    JLabel ip; //TODO: Tornar um input, por default é o localhost
-    JPanel listagemArquivos;
-    JButton botaoInicarConexao;
-    JButton botaoResetar;
-
-    public File[] connect(int[] lista){
         try {
             Socket socketCliente = new Socket(IP, PORT);
             System.out.println("Conexão efetuada com sucesso");
@@ -36,22 +24,22 @@ public class Client {
             ObjectInputStream doServidor = new ObjectInputStream(socketCliente.getInputStream());
             DataInputStream doServidorData = new DataInputStream(socketCliente.getInputStream());
 
-            fileList = (File[])doServidor.readObject();
+            fileList = (File[]) doServidor.readObject();
 
             //TODO Cria um array lista pra uso "interno" daí aqui converter pra um int[]
             //daí garante que se estiver nulo vai ser o int[0] e também que todas as posições vão estar preenchidas
 
-            if(lista == null) lista = new int[0];
+            if (lista == null) lista = new int[0];
 
             paraServidor.writeObject(lista);
 
             FileOutputStream fileOutputStream;
-            for(int i = 0; i < lista.length; i++){
-                fileOutputStream = new FileOutputStream("ClientDirectory/"+fileList[i].getName());
+            for (int i = 0; i < lista.length; i++) {
+                fileOutputStream = new FileOutputStream("ClientDirectory/" + fileList[i].getName());
                 bytes = 0;
                 size = doServidorData.readLong();
                 buffer = new byte[4 * 1024];
-                while (size > 0 && (bytes = doServidorData.read(buffer, 0, (int)Math.min(buffer.length, size)))!= -1) {
+                while (size > 0 && (bytes = doServidorData.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
                     fileOutputStream.write(buffer, 0, bytes);
                     size -= bytes; // Subtrai do tamanho conhecido do arquivo a quantidade que já foi salva
                 }
@@ -59,13 +47,24 @@ public class Client {
                 fileOutputStream.close();
             }
 
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
 
         return fileList;
     }
+
+    int[] fileIndex;
+
+    JFrame frame;
+    JPanel clientPanel;
+    JLabel status = new JLabel("Desconectado");
+    JLabel ip; //TODO: Tornar um input, por default é o localhost
+    JPanel listagemArquivos;
+    JButton botaoInicarConexao;
+    JButton botaoResetar;
+    JCheckBox checkbox;
 
     public void iniciaGUI() {
         frame = new JFrame();
@@ -83,17 +82,35 @@ public class Client {
         botaoInicarConexao.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Client cliente = new Client();
-                //TODO lista será dinâmica baseada nas checkboxes e não precisa estar em ordem
-                fileIndex = new int[1];
-                fileIndex[0] = 0;
-                //fileIndex[1] = 1;
-                File[] fileList = cliente.connect(fileIndex);
-                System.out.println("primeiro nome do retorno da funcao:" + fileList[0].getName());
+
+                int numChecks = 0;
+                int[] indicesChecados = new int[listagemArquivos.getComponentCount()];
+                for(int i = 0; i < listagemArquivos.getComponentCount(); i++){
+                    checkbox = (JCheckBox)listagemArquivos.getComponent(i);
+                    if(checkbox.isSelected()){
+                        indicesChecados[numChecks] = i;
+                        numChecks++;
+                    }
+                }
+
+                fileIndex = new int[numChecks];
+                for(int i = 0; i < numChecks; i++)
+                    fileIndex[i] = indicesChecados[i];
+
+                File[] fileList = connect(fileIndex);
+
+                listagemArquivos.removeAll();
+                listagemArquivos.revalidate();
+                listagemArquivos.repaint();
 
                 for(int i = 0; i < fileList.length; i ++){
-                    listagemArquivos.add(new JLabel(fileList[i].getName()));
+                    checkbox = new JCheckBox();
+                    checkbox.setText(i + " - " + fileList[i].getName());
+                    checkbox.setFocusable(false);
+                    listagemArquivos.add(checkbox);
                 }
+
+                listagemArquivos.repaint();
                 listagemArquivos.revalidate();
             }
         });
@@ -107,7 +124,6 @@ public class Client {
         listagemArquivos.setBounds(80,  155, 400, 200);
         listagemArquivos.setBorder(new LineBorder(new Color(192, 192, 192)));
 
-        //TODO: trocar esse botão pra ele "limpar" a exibição e os arquivos selecionados
         botaoResetar = new JButton("Resetar");
         botaoResetar.setFocusable(false);
         botaoResetar.addActionListener(new ActionListener() {
@@ -133,9 +149,6 @@ public class Client {
         frame.setVisible(true);
     }
 
-
-    public static void main(String[]args){
-        new Client().iniciaGUI();
-    }
+    public static void main(String[]args){ new Client().iniciaGUI(); }
 
 }
