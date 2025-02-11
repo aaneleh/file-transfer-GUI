@@ -11,13 +11,13 @@ import javax.swing.border.LineBorder;
 public class Server {
 
     public static int[] connect(File[] novaListaArquivos) {
+        System.out.printf("Iniciando server na porta: %s.%n", System.getenv("PORT"));
+        int PORT = Integer.parseInt(System.getenv("PORT"));
         ServerSocket socketRecepcao = null;
-        int PORT = 6789;
         File pastaArquivos = new File("DefaultFolder");
         File[] listaArquivos = pastaArquivos.listFiles();
 
         try {
-
             System.out.println("Server Aguardando");
             socketRecepcao = new ServerSocket(PORT);
             Socket socketConexao = socketRecepcao.accept();
@@ -79,12 +79,11 @@ public class Server {
         serverPanel = new JPanel();
         serverPanel.setPreferredSize(new Dimension(600,500));
         serverPanel.setLayout(null);
-
         statusConexao = new JLabel();
-        //TODO mudar número da porta pra variavel q será criada
         statusConexao.setText("Servidor desligado");
-        statusConexao.setBounds(195, 50, 300,50);
+        statusConexao.setBounds(220, 50, 300,50);
 
+        JPanel selecaoConexao = new JPanel();
         botaoConexao = new JButton();
         botaoConexao.setText("Iniciar conexao");
         botaoConexao.setBounds(195, 100, 200,30);
@@ -111,6 +110,7 @@ public class Server {
 
             }
         });
+
 
         JPanel headerListagem = new JPanel(new FlowLayout());
         headerListagem.setBounds(50, 170, 500, 60);

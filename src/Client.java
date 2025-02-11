@@ -6,11 +6,12 @@ import java.net.Socket;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
+
 public class Client {
 
-    public static File[] connect(int[] lista) {
-        String IP = "192.168.1.20";
-        int PORT = 6789;
+    public static File[] connect(String IP, int[] lista) {
+        System.out.printf("Tentando conectar na porta: %s.%n", System.getenv("PORT"));
+        int PORT = Integer.parseInt(System.getenv("PORT"));
         int bytes;
         long size;
         byte[] buffer;
@@ -25,9 +26,6 @@ public class Client {
             DataInputStream doServidorData = new DataInputStream(socketCliente.getInputStream());
 
             fileList = (File[]) doServidor.readObject();
-
-            //TODO Cria um array lista pra uso "interno" daí aqui converter pra um int[]
-            //daí garante que se estiver nulo vai ser o int[0] e também que todas as posições vão estar preenchidas
 
             if (lista == null) lista = new int[0];
 
@@ -60,7 +58,7 @@ public class Client {
     JFrame frame;
     JPanel clientPanel;
     JLabel status = new JLabel("Desconectado");
-    JLabel ip; //TODO: Tornar um input, por default é o localhost
+    JTextField ipInput;
     JPanel listagemArquivos;
     JButton botaoInicarConexao;
     JButton botaoResetar;
@@ -74,8 +72,9 @@ public class Client {
         status.setBounds(220, 50, 100, 40);
 
         JPanel selecaoConexao = new JPanel();
-        ip = new JLabel("192.168.56.1"); //todo separar numa variavel .env
-        ip.setSize(100, 40);
+        ipInput = new JTextField();
+        ipInput.setText("localhost");
+        ipInput.setPreferredSize(new Dimension(160,30));
         botaoInicarConexao = new JButton("Conectar");
         botaoInicarConexao.setSize(100, 40);
         botaoInicarConexao.setFocusable(false);
@@ -97,7 +96,7 @@ public class Client {
                 for(int i = 0; i < numChecks; i++)
                     fileIndex[i] = indicesChecados[i];
 
-                File[] fileList = connect(fileIndex);
+                File[] fileList = connect(ipInput.getText(),fileIndex);
 
                 listagemArquivos.removeAll();
                 listagemArquivos.revalidate();
@@ -114,9 +113,9 @@ public class Client {
                 listagemArquivos.revalidate();
             }
         });
-        selecaoConexao.setBounds(170, 100, 200,40);
+        selecaoConexao.setBounds(150, 100, 260,40);
 
-        selecaoConexao.add(ip);
+        selecaoConexao.add(ipInput);
         selecaoConexao.add(botaoInicarConexao);
 
         listagemArquivos = new JPanel();
@@ -149,6 +148,7 @@ public class Client {
         frame.setVisible(true);
     }
 
-    public static void main(String[]args){ new Client().iniciaGUI(); }
+    public static void main(String[]args){
+        new Client().iniciaGUI(); }
 
 }
