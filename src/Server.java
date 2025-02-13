@@ -11,14 +11,10 @@ import javax.swing.border.LineBorder;
 public class Server {
 
     public static int[] connect(File[] novaListaArquivos) {
-        System.out.printf("Iniciando server na porta: %s.%n", System.getenv("PORT"));
-        int PORT = Integer.parseInt(System.getenv("PORT"));
-        ServerSocket socketRecepcao = null;
-        File pastaArquivos = new File("DefaultFolder");
-        File[] listaArquivos = pastaArquivos.listFiles();
+        int PORT = 6789;
+        ServerSocket socketRecepcao;
 
         try {
-            System.out.println("Server Aguardando");
             socketRecepcao = new ServerSocket(PORT);
             Socket socketConexao = socketRecepcao.accept();
             System.out.println("Server conectou");
@@ -35,9 +31,9 @@ public class Server {
             byte[] buffer;
             for(int i = 0; i < indiceArquivos.length; i++){
                 bytes = 0;
-                fileInputStream = new FileInputStream(listaArquivos[indiceArquivos[0]]);
+                fileInputStream = new FileInputStream(novaListaArquivos[indiceArquivos[i]]);
                 paraClienteData = new DataOutputStream(socketConexao.getOutputStream());
-                paraClienteData.writeLong(listaArquivos[0].length());
+                paraClienteData.writeLong(novaListaArquivos[indiceArquivos[i]].length());
                 buffer = new byte[4 * 1024];
                 while ((bytes = fileInputStream.read(buffer))!= -1) {
                     paraClienteData.write(buffer, 0, bytes);
@@ -57,7 +53,7 @@ public class Server {
         }
     }
 
-    File pastaArquivos = new File("DefaultFolder");
+    File pastaArquivos = new File("./");
     File[] listaArquivos = pastaArquivos.listFiles();
 
     JFrame frame;
@@ -73,7 +69,6 @@ public class Server {
 
     //INICIALIZA GUI
     public void iniciaGUI(){
-        System.out.println("Inicia GUI");
         frame = new JFrame();
 
         serverPanel = new JPanel();
@@ -99,6 +94,7 @@ public class Server {
                     arquivoLabel = new JLabel(listaArquivos[i].getName());
                     for (int indicesEnviado : indicesEnviados)
                         if (i == indicesEnviado) {
+                            arquivoLabel.setText(arquivoLabel.getText() + " [Enviado]");
                             arquivoLabel.setIcon(iconeEnviado);
                             arquivoLabel.setHorizontalTextPosition(JLabel.LEFT);
                             break;

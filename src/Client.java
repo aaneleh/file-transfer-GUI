@@ -10,8 +10,7 @@ import javax.swing.border.LineBorder;
 public class Client {
 
     public static File[] connect(String IP, int[] lista) {
-        System.out.printf("Tentando conectar na porta: %s.%n", System.getenv("PORT"));
-        int PORT = Integer.parseInt(System.getenv("PORT"));
+        int PORT = 6789;
         int bytes;
         long size;
         byte[] buffer;
@@ -33,7 +32,8 @@ public class Client {
 
             FileOutputStream fileOutputStream;
             for (int i = 0; i < lista.length; i++) {
-                fileOutputStream = new FileOutputStream("ClientDirectory/" + fileList[i].getName());
+                JOptionPane.showMessageDialog(new JFrame(), "Recebendo arquivo: " + fileList[lista[i]].getName());
+                fileOutputStream = new FileOutputStream("./" + fileList[lista[i]].getName());                bytes = 0;
                 bytes = 0;
                 size = doServidorData.readLong();
                 buffer = new byte[4 * 1024];
