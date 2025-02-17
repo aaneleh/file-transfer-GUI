@@ -107,7 +107,6 @@ public class Server {
             }
         });
 
-
         JPanel headerListagem = new JPanel(new FlowLayout());
         headerListagem.setBounds(50, 170, 500, 60);
         headerListagem.setBackground(new Color(224,224,224));
@@ -165,21 +164,105 @@ public class Server {
         bodyListagem = new JPanel();
         bodyListagem.setLayout(new BoxLayout(bodyListagem, BoxLayout.Y_AXIS));
         bodyListagem.setBounds(50,229,500,200);
-        bodyListagem.setBorder(new LineBorder(new Color(192,192,192)));
         for (File listaArquivo : listaArquivos)
             bodyListagem.add(new JLabel(listaArquivo.getName()));
+        JScrollPane bodyListagemScroll = new JScrollPane(bodyListagem, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        bodyListagemScroll.setBorder(new LineBorder(new Color(192,192,192)));
+
+        JPanel bodyListagemScrollWrapper = new JPanel();
+        bodyListagemScroll.setBounds(50,229,500,200);
+        bodyListagemScrollWrapper.setLayout(null);
+        bodyListagemScrollWrapper.setBounds(50,229,500,200);
+        bodyListagemScrollWrapper.add(bodyListagemScroll);
 
         serverPanel.add(statusConexao);
         serverPanel.add(botaoConexao);
         serverPanel.add(headerListagem);
-        serverPanel.add(bodyListagem);
+        frame.add(bodyListagemScroll);
         frame.add(serverPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600,500);
+        frame.setResizable(false);
         frame.setVisible(true);
     }
 
 
-    public static void main(String[] args){ new Server().iniciaGUI(); }
+    public static void main(String[] args){
+        new Server().iniciaGUI();
+
+/*        File pastaArquivos = new File("./");
+        File[] listaArquivos = pastaArquivos.listFiles();
+        JFrame frame;
+        JPanel serverPanel;
+        JLabel statusConexao;
+        JLabel enderecoDiretorio;
+        JButton botaoConexao;
+        JButton botaoSelecionarDiretorio;
+        JPanel bodyListagem;
+        JLabel arquivoLabel;
+        ImageIcon iconePasta = new ImageIcon("src/folderIcon.png");
+        ImageIcon iconeEnviado = new ImageIcon("src/sentIcon.png");
+
+        frame = new JFrame();
+
+        serverPanel = new JPanel();
+        serverPanel.setPreferredSize(new Dimension(600,500));
+        serverPanel.setLayout(null);
+        statusConexao = new JLabel();
+        statusConexao.setText("Servidor desligado");
+        statusConexao.setBounds(220, 50, 300,50);
+
+        JPanel selecaoConexao = new JPanel();
+        botaoConexao = new JButton();
+        botaoConexao.setText("Iniciar conexao");
+        botaoConexao.setBounds(195, 100, 200,30);
+        botaoConexao.setFocusable(false);
+
+
+        JPanel headerListagem = new JPanel(new FlowLayout());
+        headerListagem.setBounds(50, 170, 500, 60);
+        headerListagem.setBackground(new Color(224,224,224));
+        headerListagem.setBorder(new LineBorder(new Color(192,192,192)));
+        enderecoDiretorio = new JLabel();
+        enderecoDiretorio.setText(pastaArquivos.getAbsolutePath());
+
+        botaoSelecionarDiretorio = new JButton();
+        botaoSelecionarDiretorio.setText("Selecionar diretório");
+        botaoSelecionarDiretorio.setIcon(iconePasta);
+        botaoSelecionarDiretorio.setFocusable(false);
+
+        headerListagem.setLayout(new FlowLayout());
+        headerListagem.add(enderecoDiretorio);
+        headerListagem.add(botaoSelecionarDiretorio);
+
+        bodyListagem = new JPanel();
+        bodyListagem.setLayout(new BoxLayout(bodyListagem, BoxLayout.Y_AXIS));
+        bodyListagem.setBounds(50,229,500,200);
+        bodyListagem.setBorder(new LineBorder(new Color(192,192,192)));
+        for (int i = 0 ; i < 50; i++)
+            bodyListagem.add(new JLabel("item " + i));
+
+        JScrollPane bodyListagemScroll = new JScrollPane(bodyListagem, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JPanel bodyListagemScrollWrapper = new JPanel();
+        bodyListagemScroll.setSize(500,200);
+        bodyListagemScrollWrapper.setLayout(null);
+        bodyListagemScrollWrapper.setBounds(50,229,500,200);
+        bodyListagemScrollWrapper.add(bodyListagemScroll);
+
+        serverPanel.add(bodyListagemScrollWrapper);
+
+
+        serverPanel.add(statusConexao);
+        serverPanel.add(botaoConexao);
+        serverPanel.add(headerListagem);
+        frame.add(serverPanel);
+
+
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600,500);
+        frame.setVisible(true);*/
+
+    }
 
 }
