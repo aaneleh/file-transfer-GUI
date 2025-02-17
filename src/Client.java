@@ -149,61 +149,6 @@ public class Client {
     }
 
     public static void main(String[]args){
-        //new Client().iniciaGUI();
-
-        JFrame frame;
-        JPanel clientPanel;
-        JLabel status = new JLabel("Desconectado");
-        JTextField ipInput;
-        JPanel listagemArquivos;
-        JButton botaoInicarConexao;
-        JButton botaoResetar;
-        JCheckBox checkbox;
-
-        frame = new JFrame();
-        clientPanel = new JPanel();
-        clientPanel.setLayout(null);
-
-        status.setBounds(220, 50, 100, 40);
-
-        JPanel selecaoConexao = new JPanel();
-        ipInput = new JTextField();
-        ipInput.setText("localhost");
-        ipInput.setPreferredSize(new Dimension(160,30));
-        botaoInicarConexao = new JButton("Conectar");
-        botaoInicarConexao.setSize(100, 40);
-        botaoInicarConexao.setFocusable(false);
-
-        selecaoConexao.setBounds(150, 100, 260,40);
-
-        selecaoConexao.add(ipInput);
-        selecaoConexao.add(botaoInicarConexao);
-
-        listagemArquivos = new JPanel();
-        listagemArquivos.setLayout(new BoxLayout(listagemArquivos, BoxLayout.Y_AXIS));
-        listagemArquivos.setBounds(40,  155, 400, 200);
-        listagemArquivos.setBorder(new LineBorder(new Color(192, 192, 192)));
-        for(int i = 0 ; i < 50; i++){
-            listagemArquivos.add(new JLabel("Item " + i));
-        }
-
-        JScrollPane bodyListagemScroll = new JScrollPane(listagemArquivos, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        bodyListagemScroll.setBorder(new LineBorder(new Color(192,192,192)));
-
-        JPanel bodyListagemScrollWrapper = new JPanel();
-        bodyListagemScroll.setBounds(80,  155, 400, 200);
-        bodyListagemScrollWrapper.setLayout(null);
-        bodyListagemScrollWrapper.setBounds(120,  155, 400, 200);
-        bodyListagemScrollWrapper.add(bodyListagemScroll);
-
-        clientPanel.add(status);
-        clientPanel.add(selecaoConexao);
-        frame.add(bodyListagemScroll);
-        frame.add(clientPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600,500);
-        frame.setResizable(false);
-        frame.setVisible(true);
-
+        new Client().iniciaGUI();
     }
 }
